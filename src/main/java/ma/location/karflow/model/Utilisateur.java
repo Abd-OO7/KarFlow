@@ -1,7 +1,6 @@
 package ma.location.karflow.model;
 
 import java.io.Serializable;
-import java.util.List;
 
 
 import jakarta.persistence.*;
@@ -31,11 +30,14 @@ public class Utilisateur implements Serializable {
 	private String passeword;
 	private String telephone;
 	private String photo;
-	@ManyToMany(cascade = CascadeType.DETACH, fetch = FetchType.EAGER)
-	@JoinTable(name = "user_role", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
-	@OnDelete(action = OnDeleteAction.CASCADE)
-	@JsonIgnore
-	private List<Role> roles;
+
+	/**
+	 * Rôle unique de l'utilisateur (ADMIN, AGENT, ...).
+	 * On simplifie le modèle en supprimant la table de jointure user_role.
+	 */
+	@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "role_id", nullable = false)
+	private Role role;
 
 	public Utilisateur(long utilisateurID) {
 		this.utilisateurID = utilisateurID;
