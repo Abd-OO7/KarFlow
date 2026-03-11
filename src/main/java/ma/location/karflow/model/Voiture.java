@@ -24,7 +24,10 @@ public class Voiture implements Serializable {
 	private Long voitureID;
 	private String matricule;
 	private LocalDate dateEntree;
-	private boolean statut;
+
+	@Enumerated(EnumType.STRING)
+	private StatutVoiture statut;
+
 	private double kilometrage;
 	private String couleur;
 
@@ -40,7 +43,7 @@ public class Voiture implements Serializable {
 	@JsonIgnore
 	private Marque marque;
 
-	public Voiture(Long voitureID, String matricule, LocalDate dateEntree, boolean statut, double kilometrage,
+	public Voiture(Long voitureID, String matricule, LocalDate dateEntree, StatutVoiture statut, double kilometrage,
 				   String couleur, Long idcategorie, Long idmarque) {
 		this.voitureID = voitureID;
 		this.matricule = matricule;
