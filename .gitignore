@@ -1,9 +1,9 @@
 HELP.md
 target/
-.mvn/wrapper/maven-wrapper.jar
+!.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
-
+frontend
 ### STS ###
 .apt_generated
 .classpath
@@ -31,3 +31,11 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Mac ###
+.DS_Store
+
+### Environment ###
+.env
+*.env.local
+application-local.yml

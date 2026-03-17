@@ -1,0 +1,73 @@
+spring:
+  application:
+    name: KarFlow
+
+  profiles:
+    active: dev
+
+  # ── JPA / Hibernate ──
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+        default_batch_fetch_size: 20
+
+  # ── Flyway ──
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 0
+    locations: classpath:db/migration
+
+  # ── Jackson ──
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    default-property-inclusion: non_null
+
+  # ── Mail (overridden per profile) ──
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  # ── Servlet ──
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 20MB
+
+# ── Server ──
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+# ── OpenAPI ──
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+
+# ── App custom properties ──
+karflow:
+  jwt:
+    secret: ${JWT_SECRET:default-dev-secret-key-change-me-in-production-must-be-at-least-256-bits-long}
+    access-token-expiration: 900000       # 15 min
+    refresh-token-expiration: 604800000   # 7 days
+  cors:
+    allowed-origins: ${CORS_ORIGINS:http://localhost:4200}
+  mail:
+    from: ${MAIL_FROM:noreply@karflow.ma}
