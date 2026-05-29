@@ -14,6 +14,12 @@ spring:
   flyway:
     clean-disabled: false
 
+karflow:
+  jwt:
+    secret: ZGV2LXNlY3JldC1rZXktZm9yLWthcmZsb3ctZGV2LW9ubHktbXVzdC1iZS1hdC1sZWFzdC0yNTYtYml0cy1sb25n
+    cookie-secure: false
+    cookie-domain: localhost
+
 logging:
   level:
     ma.karflow: DEBUG

@@ -18,4 +18,6 @@ public class JwtConfig {
     private String secret;
     private long accessTokenExpiration;
     private long refreshTokenExpiration;
+    private boolean cookieSecure;
+    private String cookieDomain;
 }

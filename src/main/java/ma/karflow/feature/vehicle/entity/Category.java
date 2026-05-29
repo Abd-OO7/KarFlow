@@ -7,6 +7,8 @@ import lombok.Setter;
 import ma.karflow.shared.entity.BaseEntity;
 import org.hibernate.annotations.SQLRestriction;
 
+import java.math.BigDecimal;
+
 @Entity
 @Table(name = "category")
 @Getter
@@ -21,6 +23,6 @@ public class Category extends BaseEntity {
     @Column(name = "description", length = 500)
     private String description;
 
-    @Column(name = "daily_rate_multiplier", nullable = false)
-    private double dailyRateMultiplier = 1.0;
+    @Column(name = "daily_rate_multiplier", nullable = false, precision = 19, scale = 2)
+    private BigDecimal dailyRateMultiplier = BigDecimal.ONE;
 }

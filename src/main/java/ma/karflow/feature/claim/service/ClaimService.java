@@ -12,6 +12,7 @@ import java.util.UUID;
 public interface ClaimService {
     PageResponse<ClaimResponse> getAll(Pageable pageable);
     PageResponse<ClaimResponse> getByStatus(ClaimStatus status, Pageable pageable);
+    PageResponse<ClaimResponse> getByClient(UUID clientId, Pageable pageable);
     ClaimResponse getById(UUID id);
     ClaimResponse create(ClaimRequest request);
     ClaimResponse updateStatus(UUID id, ClaimStatusUpdateRequest request);

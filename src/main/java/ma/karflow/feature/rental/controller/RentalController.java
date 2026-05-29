@@ -9,9 +9,13 @@ import ma.karflow.feature.rental.enums.RentalStatus;
 import ma.karflow.feature.rental.service.RentalService;
 import ma.karflow.shared.dto.ApiResponse;
 import ma.karflow.shared.dto.PageResponse;
+import ma.karflow.shared.util.PdfGenerator;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +29,7 @@ import java.util.UUID;
 public class RentalController {
 
     private final RentalService rentalService;
+    private final PdfGenerator pdfGenerator;
 
     @GetMapping
     @Operation(summary = "Lister les locations")
@@ -84,5 +89,20 @@ public class RentalController {
     @PreAuthorize("hasAuthority('RENTAL_MANAGE')")
     public ResponseEntity<ApiResponse<RentalResponse>> cancel(@PathVariable UUID id) {
         return ResponseEntity.ok(ApiResponse.success(rentalService.cancel(id), "Location annulée"));
+    }
+
+    @GetMapping("/{id}/contract")
+    @Operation(summary = "Télécharger le contrat de location en PDF")
+    @PreAuthorize("hasAuthority('RENTAL_MANAGE')")
+    public ResponseEntity<byte[]> downloadContract(@PathVariable UUID id) {
+        RentalResponse rental = rentalService.getById(id);
+        byte[] pdf = pdfGenerator.generateContractPdf(rental);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDisposition(
+                ContentDisposition.attachment().filename("contrat-location-" + id + ".pdf").build()
+        );
+        return ResponseEntity.ok().headers(headers).body(pdf);
     }
 }

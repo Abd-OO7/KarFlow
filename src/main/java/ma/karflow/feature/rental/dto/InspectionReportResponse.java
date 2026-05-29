@@ -2,14 +2,15 @@ package ma.karflow.feature.rental.dto;
 
 import ma.karflow.feature.rental.enums.InspectionType;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 public record InspectionReportResponse(
         UUID id,
         InspectionType type,
-        Double fuelLevel,
-        Double mileage,
+        BigDecimal fuelLevel,
+        BigDecimal mileage,
         boolean exteriorFrontScratches,
         boolean exteriorFrontDents,
         boolean exteriorRearScratches,

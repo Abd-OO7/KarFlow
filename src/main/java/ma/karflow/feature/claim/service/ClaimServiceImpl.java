@@ -47,6 +47,15 @@ public class ClaimServiceImpl implements ClaimService {
 
     @Override
     @Transactional(readOnly = true)
+    public PageResponse<ClaimResponse> getByClient(UUID clientId, Pageable pageable) {
+        return PageResponse.from(
+                claimRepository.findByClientIdAndTenantId(clientId, TenantContext.getTenantId(), pageable),
+                claimMapper::toResponse
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public ClaimResponse getById(UUID id) {
         return claimMapper.toResponse(findByIdOrThrow(id));
     }

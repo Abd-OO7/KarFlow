@@ -7,6 +7,8 @@ import lombok.Setter;
 import ma.karflow.shared.entity.BaseEntity;
 import org.hibernate.annotations.SQLRestriction;
 
+import java.math.BigDecimal;
+
 @Entity
 @Table(name = "insurance")
 @Getter
@@ -24,8 +26,8 @@ public class Insurance extends BaseEntity {
     @Column(name = "coverage_type", length = 100)
     private String coverageType;
 
-    @Column(name = "daily_rate", nullable = false)
-    private double dailyRate;
+    @Column(name = "daily_rate", nullable = false, precision = 19, scale = 2)
+    private BigDecimal dailyRate;
 
     @Column(name = "provider")
     private String provider;

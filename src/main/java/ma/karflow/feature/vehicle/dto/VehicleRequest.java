@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 public record VehicleRequest(
@@ -15,10 +16,11 @@ public record VehicleRequest(
         @Size(max = 50)
         String color,
 
-        double mileage,
+        @NotNull(message = "Le kilométrage est obligatoire")
+        BigDecimal mileage,
 
         @Positive(message = "Le tarif journalier doit être positif")
-        double dailyRate,
+        BigDecimal dailyRate,
 
         String photoUrl,
 

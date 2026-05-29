@@ -10,7 +10,10 @@ import ma.karflow.feature.vehicle.entity.Vehicle;
 import ma.karflow.shared.entity.BaseEntity;
 import org.hibernate.annotations.SQLRestriction;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "rental")
@@ -30,16 +33,16 @@ public class Rental extends BaseEntity {
     private LocalDate actualReturnDate;
 
     @Column(name = "mileage_before")
-    private Double mileageBefore;
+    private BigDecimal mileageBefore;
 
     @Column(name = "mileage_after")
-    private Double mileageAfter;
+    private BigDecimal mileageAfter;
 
     @Column(name = "deposit")
-    private double deposit;
+    private BigDecimal deposit = BigDecimal.ZERO;
 
     @Column(name = "total_amount")
-    private double totalAmount;
+    private BigDecimal totalAmount = BigDecimal.ZERO;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 30)
@@ -59,4 +62,25 @@ public class Rental extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "insurance_id")
     private Insurance insurance;
+
+    @Column(name = "reservation_id")
+    private UUID reservationId;
+
+    @Column(name = "delivered_by_agent_id")
+    private UUID deliveredByAgentId;
+
+    @Column(name = "delivered_at")
+    private LocalDateTime deliveredAt;
+
+    @Column(name = "returned_by_agent_id")
+    private UUID returnedByAgentId;
+
+    @Column(name = "returned_at")
+    private LocalDateTime returnedAt;
+
+    @Column(name = "deposit_refund_amount", precision = 19, scale = 2)
+    private BigDecimal depositRefundAmount = BigDecimal.ZERO;
+
+    @Column(name = "damage_cost", precision = 19, scale = 2)
+    private BigDecimal damageCost = BigDecimal.ZERO;
 }

@@ -8,6 +8,8 @@ import ma.karflow.feature.vehicle.enums.VehicleStatus;
 import ma.karflow.shared.entity.BaseEntity;
 import org.hibernate.annotations.SQLRestriction;
 
+import java.math.BigDecimal;
+
 @Entity
 @Table(name = "vehicle")
 @Getter
@@ -22,11 +24,11 @@ public class Vehicle extends BaseEntity {
     @Column(name = "color", length = 50)
     private String color;
 
-    @Column(name = "mileage", nullable = false)
-    private double mileage;
+    @Column(name = "mileage", nullable = false, precision = 19, scale = 2)
+    private BigDecimal mileage = BigDecimal.ZERO;
 
-    @Column(name = "daily_rate", nullable = false)
-    private double dailyRate;
+    @Column(name = "daily_rate", nullable = false, precision = 19, scale = 2)
+    private BigDecimal dailyRate;
 
     @Column(name = "photo_url", length = 500)
     private String photoUrl;

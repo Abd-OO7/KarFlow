@@ -34,6 +34,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -65,7 +66,7 @@ class InvoiceServiceImplTest {
         TenantContext.setTenantId(tenantId);
 
         Category category = new Category();
-        category.setDailyRateMultiplier(1.0);
+        category.setDailyRateMultiplier(BigDecimal.ONE);
 
         Brand brand = new Brand();
         brand.setName("Toyota");
@@ -76,7 +77,7 @@ class InvoiceServiceImplTest {
 
         Vehicle vehicle = new Vehicle();
         vehicle.setLicensePlate("AB-123-CD");
-        vehicle.setDailyRate(300.0);
+        vehicle.setDailyRate(new BigDecimal("300.00"));
         vehicle.setStatus(VehicleStatus.RENTED);
         vehicle.setCategory(category);
         vehicle.setVehicleModel(model);
@@ -92,21 +93,21 @@ class InvoiceServiceImplTest {
         rental.setStartDate(LocalDate.now().minusDays(5));
         rental.setEndDate(LocalDate.now());
         rental.setStatus(RentalStatus.RETURNED);
-        rental.setMileageBefore(50000.0);
-        rental.setMileageAfter(50500.0);
+        rental.setMileageBefore(new BigDecimal("50000"));
+        rental.setMileageAfter(new BigDecimal("50500"));
         rental.setVehicle(vehicle);
         rental.setClient(client);
 
-        InvoiceLine line = new InvoiceLine("Location 5 jours", 5, 300.0, InvoiceLineType.RENTAL_DAYS);
+        InvoiceLine line = new InvoiceLine("Location 5 jours", 5, new BigDecimal("300.00"), InvoiceLineType.RENTAL_DAYS);
         invoice = new Invoice();
         invoice.setId(UUID.randomUUID());
         invoice.setTenantId(tenantId);
         invoice.setInvoiceNumber("INV-2026-00001");
         invoice.setRental(rental);
-        invoice.setSubtotal(1500.0);
-        invoice.setTaxRate(20.0);
-        invoice.setTaxAmount(300.0);
-        invoice.setTotalAmount(1800.0);
+        invoice.setSubtotal(new BigDecimal("1500.00"));
+        invoice.setTaxRate(new BigDecimal("20.00"));
+        invoice.setTaxAmount(new BigDecimal("300.00"));
+        invoice.setTotalAmount(new BigDecimal("1800.00"));
         invoice.setStatus(InvoiceStatus.DRAFT);
         invoice.setLines(new ArrayList<>(List.of(line)));
         invoice.setPayments(new ArrayList<>());
@@ -125,7 +126,7 @@ class InvoiceServiceImplTest {
         when(invoiceRepository.save(any(Invoice.class))).thenAnswer(inv -> inv.getArgument(0));
 
         InvoiceResponse expected = new InvoiceResponse(UUID.randomUUID(), "INV-2026-00001",
-                1500, 20, 300, 0, 1800, 0, 1800, InvoiceStatus.DRAFT,
+                new BigDecimal("1500.00"), new BigDecimal("20.00"), new BigDecimal("300.00"), BigDecimal.ZERO, new BigDecimal("1800.00"), BigDecimal.ZERO, new BigDecimal("1800.00"), InvoiceStatus.DRAFT,
                 null, null, rental.getId(), "Ahmed Benali", "AB-123-CD", List.of(), null);
         when(invoiceMapper.toResponse(any(Invoice.class))).thenReturn(expected);
 
@@ -138,8 +139,8 @@ class InvoiceServiceImplTest {
 
     @Test
     void addPayment_partialPayment_shouldNotMarkAsPaid() {
-        PaymentRequest request = new PaymentRequest(500, PaymentMethod.CASH, null, null);
-        PaymentResponse expected = new PaymentResponse(UUID.randomUUID(), 500, LocalDateTime.now(),
+        PaymentRequest request = new PaymentRequest(new BigDecimal("500"), PaymentMethod.CASH, null, null);
+        PaymentResponse expected = new PaymentResponse(UUID.randomUUID(), new BigDecimal("500"), LocalDateTime.now(),
                 PaymentMethod.CASH, null, null, invoice.getId(), null);
 
         when(invoiceRepository.findByIdAndTenantId(invoice.getId(), tenantId)).thenReturn(Optional.of(invoice));
@@ -149,15 +150,15 @@ class InvoiceServiceImplTest {
 
         PaymentResponse result = invoiceService.addPayment(invoice.getId(), request);
 
-        assertEquals(500, result.amount());
+        assertEquals(new BigDecimal("500"), result.amount());
         assertEquals(InvoiceStatus.SENT, invoice.getStatus()); // DRAFT → SENT after partial payment
         assertNull(invoice.getPaidDate());
     }
 
     @Test
     void addPayment_fullPayment_shouldMarkAsPaid() {
-        PaymentRequest request = new PaymentRequest(1800, PaymentMethod.CREDIT_CARD, "TXN-123", null);
-        PaymentResponse expected = new PaymentResponse(UUID.randomUUID(), 1800, LocalDateTime.now(),
+        PaymentRequest request = new PaymentRequest(new BigDecimal("1800"), PaymentMethod.CREDIT_CARD, "TXN-123", null);
+        PaymentResponse expected = new PaymentResponse(UUID.randomUUID(), new BigDecimal("1800"), LocalDateTime.now(),
                 PaymentMethod.CREDIT_CARD, "TXN-123", null, invoice.getId(), null);
 
         when(invoiceRepository.findByIdAndTenantId(invoice.getId(), tenantId)).thenReturn(Optional.of(invoice));
@@ -174,7 +175,7 @@ class InvoiceServiceImplTest {
     @Test
     void addPayment_toAlreadyPaidInvoice_shouldThrow() {
         invoice.setStatus(InvoiceStatus.PAID);
-        PaymentRequest request = new PaymentRequest(100, PaymentMethod.CASH, null, null);
+        PaymentRequest request = new PaymentRequest(new BigDecimal("100"), PaymentMethod.CASH, null, null);
 
         when(invoiceRepository.findByIdAndTenantId(invoice.getId(), tenantId)).thenReturn(Optional.of(invoice));
 
@@ -183,7 +184,7 @@ class InvoiceServiceImplTest {
 
     @Test
     void addPayment_exceedingAmount_shouldThrow() {
-        PaymentRequest request = new PaymentRequest(5000, PaymentMethod.CASH, null, null);
+        PaymentRequest request = new PaymentRequest(new BigDecimal("5000"), PaymentMethod.CASH, null, null);
 
         when(invoiceRepository.findByIdAndTenantId(invoice.getId(), tenantId)).thenReturn(Optional.of(invoice));
 

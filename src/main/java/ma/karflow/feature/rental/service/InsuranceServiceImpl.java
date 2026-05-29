@@ -7,6 +7,7 @@ import ma.karflow.feature.rental.entity.Insurance;
 import ma.karflow.feature.rental.mapper.InsuranceMapper;
 import ma.karflow.feature.rental.repository.InsuranceRepository;
 import ma.karflow.shared.dto.PageResponse;
+import ma.karflow.shared.exception.DuplicateResourceException;
 import ma.karflow.shared.exception.ResourceNotFoundException;
 import ma.karflow.shared.util.TenantContext;
 import org.springframework.data.domain.Pageable;
@@ -37,8 +38,12 @@ public class InsuranceServiceImpl implements InsuranceService {
     @Override
     @Transactional
     public InsuranceResponse create(InsuranceRequest request) {
+        UUID tenantId = TenantContext.getTenantId();
+        if (insuranceRepository.existsByNameAndTenantId(request.name(), tenantId)) {
+            throw new DuplicateResourceException("Insurance", "name", request.name());
+        }
         Insurance insurance = insuranceMapper.toEntity(request);
-        insurance.setTenantId(TenantContext.getTenantId());
+        insurance.setTenantId(tenantId);
         return insuranceMapper.toResponse(insuranceRepository.save(insurance));
     }
 

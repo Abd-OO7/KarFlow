@@ -45,7 +45,7 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = categoryMapper.toEntity(request);
         category.setTenantId(tenantId);
         if (request.dailyRateMultiplier() == null) {
-            category.setDailyRateMultiplier(1.0);
+            category.setDailyRateMultiplier(java.math.BigDecimal.ONE);
         }
         return categoryMapper.toResponse(categoryRepository.save(category));
     }

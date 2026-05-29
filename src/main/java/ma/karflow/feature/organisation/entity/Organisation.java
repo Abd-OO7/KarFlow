@@ -39,6 +39,9 @@ public class Organisation extends BaseEntity {
     @Column(name = "subscription_plan", length = 50)
     private String subscriptionPlan = "FREE";
 
+    @Column(name = "description", length = 2000)
+    private String description;
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "organisation_city",

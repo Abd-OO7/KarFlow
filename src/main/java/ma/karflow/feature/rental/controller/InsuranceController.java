@@ -28,31 +28,35 @@ public class InsuranceController {
 
     @GetMapping
     @Operation(summary = "Lister les assurances")
-    @PreAuthorize("hasAuthority('RENTAL_MANAGE')")
+    @PreAuthorize("hasAuthority('VEHICLE_READ')")
     public ResponseEntity<ApiResponse<PageResponse<InsuranceResponse>>> getAll(@PageableDefault(size = 20) Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.success(insuranceService.getAll(pageable)));
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('RENTAL_MANAGE')")
+    @Operation(summary = "Récupérer une assurance")
+    @PreAuthorize("hasAuthority('VEHICLE_READ')")
     public ResponseEntity<ApiResponse<InsuranceResponse>> getById(@PathVariable UUID id) {
         return ResponseEntity.ok(ApiResponse.success(insuranceService.getById(id)));
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('RENTAL_MANAGE')")
+    @Operation(summary = "Créer une assurance")
+    @PreAuthorize("hasAuthority('VEHICLE_WRITE')")
     public ResponseEntity<ApiResponse<InsuranceResponse>> create(@Valid @RequestBody InsuranceRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(insuranceService.create(request), "Assurance créée"));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('RENTAL_MANAGE')")
+    @Operation(summary = "Modifier une assurance")
+    @PreAuthorize("hasAuthority('VEHICLE_WRITE')")
     public ResponseEntity<ApiResponse<InsuranceResponse>> update(@PathVariable UUID id, @Valid @RequestBody InsuranceRequest request) {
         return ResponseEntity.ok(ApiResponse.success(insuranceService.update(id, request)));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('RENTAL_MANAGE')")
+    @Operation(summary = "Supprimer une assurance (soft delete)")
+    @PreAuthorize("hasAuthority('VEHICLE_WRITE')")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable UUID id) {
         insuranceService.delete(id);
         return ResponseEntity.ok(ApiResponse.success(null, "Assurance supprimée"));

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rappel d'essai KarFlow</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #F3F4F6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+    <table role="presentation" style="width: 100%; border-collapse: collapse;">
+        <tr>
+            <td style="padding: 40px 0;">
+                <table role="presentation" style="width: 600px; max-width: 100%; margin: 0 auto; background-color: #FFFFFF; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);">
+
+                    <!-- Header -->
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #3B82F6, #2563EB); padding: 32px 40px; text-align: center;">
+                            <h1 style="margin: 0; color: #FFFFFF; font-size: 28px; font-weight: 700; letter-spacing: 1px;">KarFlow</h1>
+                            <p style="margin: 6px 0 0; color: rgba(255, 255, 255, 0.85); font-size: 13px; letter-spacing: 0.5px;">Plateforme de gestion de location de voitures</p>
+                        </td>
+                    </tr>
+
+                    <!-- Body -->
+                    <tr>
+                        <td style="padding: 40px;">
+                            <p style="margin: 0 0 20px; color: #1F2937; font-size: 16px; line-height: 1.6;">
+                                Bonjour <span th:text="${organisationName}" style="font-weight: 600; color: #3B82F6;">Organisation</span>,
+                            </p>
+
+                            <!-- Alert Box -->
+                            <table role="presentation" style="width: 100%; margin: 0 0 24px; border-collapse: collapse;">
+                                <tr>
+                                    <td style="background-color: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 8px; padding: 20px; text-align: center;">
+                                        <p style="margin: 0 0 8px; color: #1E40AF; font-size: 32px; font-weight: 700;" th:text="${daysRemaining}">5</p>
+                                        <p style="margin: 0; color: #1E40AF; font-size: 16px; font-weight: 600;">jour(s) d'essai restant(s)</p>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <p style="margin: 0 0 16px; color: #374151; font-size: 15px; line-height: 1.7;">
+                                Il vous reste <strong th:text="${daysRemaining}">5</strong> jours pour profiter de toutes les fonctionnalités de KarFlow.
+                                Passez à un plan payant pour continuer à utiliser la plateforme sans interruption.
+                            </p>
+                            <p style="margin: 0 0 32px; color: #374151; font-size: 15px; line-height: 1.7;">
+                                Choisissez le plan qui correspond le mieux à vos besoins et continuez à gérer votre activité de location en toute sérénité.
+                            </p>
+
+                            <!-- Button -->
+                            <table role="presentation" style="margin: 0 auto;">
+                                <tr>
+                                    <td style="border-radius: 8px; background: linear-gradient(135deg, #3B82F6, #2563EB);">
+                                        <a href="#" style="display: inline-block; padding: 14px 36px; color: #FFFFFF; font-size: 15px; font-weight: 600; text-decoration: none; letter-spacing: 0.3px;">
+                                            Choisir mon plan
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Divider -->
+                    <tr>
+                        <td style="padding: 0 40px;">
+                            <hr style="border: none; border-top: 1px solid #E5E7EB; margin: 0;" />
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color: #F9FAFB; padding: 28px 40px; text-align: center;">
+                            <p style="margin: 0 0 8px; color: #6B7280; font-size: 13px; line-height: 1.5;">
+                                <strong style="color: #4B5563;">KarFlow</strong> &mdash; Plateforme de gestion de location de voitures
+                            </p>
+                            <p style="margin: 0; color: #9CA3AF; font-size: 12px;">
+                                Cet email a été envoyé automatiquement. Merci de ne pas y répondre.
+                            </p>
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

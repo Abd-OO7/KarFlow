@@ -1,8 +1,10 @@
 package ma.karflow.feature.dashboard.dto;
 
+import java.math.BigDecimal;
+
 public record RevenueDataPoint(
         String period,
-        double amount,
+        BigDecimal amount,
         long count
 ) {
 }

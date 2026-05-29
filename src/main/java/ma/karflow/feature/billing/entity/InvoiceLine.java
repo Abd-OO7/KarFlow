@@ -8,6 +8,9 @@ import ma.karflow.feature.billing.enums.InvoiceLineType;
 import ma.karflow.shared.entity.BaseEntity;
 import org.hibernate.annotations.SQLRestriction;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 @Entity
 @Table(name = "invoice_line")
 @Getter
@@ -20,13 +23,13 @@ public class InvoiceLine extends BaseEntity {
     private String label;
 
     @Column(name = "quantity", nullable = false)
-    private double quantity = 1;
+    private BigDecimal quantity = BigDecimal.ONE;
 
     @Column(name = "unit_price", nullable = false)
-    private double unitPrice;
+    private BigDecimal unitPrice;
 
     @Column(name = "total_price", nullable = false)
-    private double totalPrice;
+    private BigDecimal totalPrice;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "line_type", nullable = false, length = 30)
@@ -36,11 +39,19 @@ public class InvoiceLine extends BaseEntity {
     @JoinColumn(name = "invoice_id", nullable = false)
     private Invoice invoice;
 
-    public InvoiceLine(String label, double quantity, double unitPrice, InvoiceLineType lineType) {
+    public InvoiceLine(String label, long quantity, BigDecimal unitPrice, InvoiceLineType lineType) {
+        this.label = label;
+        this.quantity = BigDecimal.valueOf(quantity);
+        this.unitPrice = unitPrice;
+        this.totalPrice = this.quantity.multiply(unitPrice).setScale(2, RoundingMode.HALF_UP);
+        this.lineType = lineType;
+    }
+
+    public InvoiceLine(String label, BigDecimal quantity, BigDecimal unitPrice, InvoiceLineType lineType) {
         this.label = label;
         this.quantity = quantity;
         this.unitPrice = unitPrice;
-        this.totalPrice = quantity * unitPrice;
+        this.totalPrice = quantity.multiply(unitPrice).setScale(2, RoundingMode.HALF_UP);
         this.lineType = lineType;
     }
 }

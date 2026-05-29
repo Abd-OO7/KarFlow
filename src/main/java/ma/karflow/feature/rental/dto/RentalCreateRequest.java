@@ -4,6 +4,7 @@ import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -16,7 +17,7 @@ public record RentalCreateRequest(
         LocalDate endDate,
 
         @PositiveOrZero(message = "La caution doit être positive ou nulle")
-        double deposit,
+        BigDecimal deposit,
 
         String notes,
 

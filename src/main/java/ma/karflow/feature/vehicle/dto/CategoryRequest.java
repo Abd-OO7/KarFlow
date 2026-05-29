@@ -4,6 +4,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
+import java.math.BigDecimal;
+
 public record CategoryRequest(
         @NotBlank(message = "Le nom est obligatoire")
         @Size(max = 100)
@@ -13,6 +15,6 @@ public record CategoryRequest(
         String description,
 
         @Positive(message = "Le multiplicateur doit être positif")
-        Double dailyRateMultiplier
+        BigDecimal dailyRateMultiplier
 ) {
 }

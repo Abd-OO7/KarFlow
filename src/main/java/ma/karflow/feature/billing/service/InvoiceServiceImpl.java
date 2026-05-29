@@ -27,6 +27,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -88,12 +90,12 @@ public class InvoiceServiceImpl implements InvoiceService {
                 rental.getActualReturnDate() != null ? rental.getActualReturnDate() : rental.getEndDate());
         if (days < 1) days = 1;
 
-        double dailyRate = rental.getVehicle().getDailyRate() * rental.getVehicle().getCategory().getDailyRateMultiplier();
+        BigDecimal dailyRate = rental.getVehicle().getDailyRate().multiply(rental.getVehicle().getCategory().getDailyRateMultiplier());
 
         // Line: rental days
         InvoiceLine rentalLine = new InvoiceLine(
                 "Location véhicule " + rental.getVehicle().getLicensePlate() + " — " + days + " jour(s)",
-                days, dailyRate, InvoiceLineType.RENTAL_DAYS);
+                BigDecimal.valueOf(days), dailyRate, InvoiceLineType.RENTAL_DAYS);
         rentalLine.setTenantId(tenantId);
         rentalLine.setInvoice(invoice);
         invoice.getLines().add(rentalLine);
@@ -102,7 +104,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         if (rental.getInsurance() != null) {
             InvoiceLine insuranceLine = new InvoiceLine(
                     "Assurance " + rental.getInsurance().getName(),
-                    days, rental.getInsurance().getDailyRate(), InvoiceLineType.INSURANCE);
+                    BigDecimal.valueOf(days), rental.getInsurance().getDailyRate(), InvoiceLineType.INSURANCE);
             insuranceLine.setTenantId(tenantId);
             insuranceLine.setInvoice(invoice);
             invoice.getLines().add(insuranceLine);
@@ -113,7 +115,7 @@ public class InvoiceServiceImpl implements InvoiceService {
             long extraDays = ChronoUnit.DAYS.between(rental.getEndDate(), rental.getActualReturnDate());
             InvoiceLine lateLine = new InvoiceLine(
                     "Retour tardif — " + extraDays + " jour(s) supplémentaire(s) (+50%)",
-                    extraDays, dailyRate * 1.5, InvoiceLineType.LATE_RETURN);
+                    BigDecimal.valueOf(extraDays), dailyRate.multiply(new BigDecimal("1.5")), InvoiceLineType.LATE_RETURN);
             lateLine.setTenantId(tenantId);
             lateLine.setInvoice(invoice);
             invoice.getLines().add(lateLine);
@@ -121,13 +123,13 @@ public class InvoiceServiceImpl implements InvoiceService {
 
         // Line: extra km
         if (rental.getMileageBefore() != null && rental.getMileageAfter() != null) {
-            double kmDriven = rental.getMileageAfter() - rental.getMileageBefore();
-            double freeKm = days * 250;
-            if (kmDriven > freeKm) {
-                double extraKm = kmDriven - freeKm;
+            BigDecimal kmDriven = rental.getMileageAfter().subtract(rental.getMileageBefore());
+            BigDecimal freeKm = BigDecimal.valueOf(days).multiply(BigDecimal.valueOf(250));
+            if (kmDriven.compareTo(freeKm) > 0) {
+                BigDecimal extraKm = kmDriven.subtract(freeKm);
                 InvoiceLine kmLine = new InvoiceLine(
-                        "Kilomètres supplémentaires — " + String.format("%.0f", extraKm) + " km",
-                        extraKm, 2.0, InvoiceLineType.EXTRA_KM);
+                        "Kilomètres supplémentaires — " + extraKm.toPlainString() + " km",
+                        extraKm, new BigDecimal("2.00"), InvoiceLineType.EXTRA_KM);
                 kmLine.setTenantId(tenantId);
                 kmLine.setInvoice(invoice);
                 invoice.getLines().add(kmLine);
@@ -156,8 +158,8 @@ public class InvoiceServiceImpl implements InvoiceService {
             throw new BusinessException("Impossible d'ajouter un paiement à une facture annulée");
         }
 
-        double remaining = invoice.getTotalAmount() - invoice.getTotalPaid();
-        if (request.amount() > remaining + 0.01) {
+        BigDecimal remaining = invoice.getTotalAmount().subtract(invoice.getTotalPaid());
+        if (request.amount().compareTo(remaining) > 0) {
             throw new BusinessException("Le montant du paiement (" + request.amount()
                     + " MAD) dépasse le restant dû (" + String.format("%.2f", remaining) + " MAD)");
         }
@@ -173,8 +175,8 @@ public class InvoiceServiceImpl implements InvoiceService {
         payment = paymentRepository.save(payment);
 
         // Update invoice status if fully paid
-        double totalPaid = invoice.getTotalPaid() + request.amount();
-        if (totalPaid >= invoice.getTotalAmount() - 0.01) {
+        BigDecimal totalPaid = invoice.getTotalPaid().add(request.amount());
+        if (totalPaid.compareTo(invoice.getTotalAmount()) >= 0) {
             invoice.setStatus(InvoiceStatus.PAID);
             invoice.setPaidDate(LocalDate.now());
 
@@ -211,7 +213,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         List<List<String>> rows = invoice.getLines().stream()
                 .map(line -> List.of(
                         line.getLabel(),
-                        String.format("%.0f", line.getQuantity()),
+                        line.getQuantity().toPlainString(),
                         String.format("%.2f MAD", line.getUnitPrice()),
                         String.format("%.2f MAD", line.getTotalPrice())
                 ))
@@ -219,8 +221,8 @@ public class InvoiceServiceImpl implements InvoiceService {
 
         // Add totals
         rows.add(List.of("", "", "Sous-total HT", String.format("%.2f MAD", invoice.getSubtotal())));
-        rows.add(List.of("", "", "TVA (" + (int) invoice.getTaxRate() + "%)", String.format("%.2f MAD", invoice.getTaxAmount())));
-        if (invoice.getDiscount() > 0) {
+        rows.add(List.of("", "", "TVA (" + invoice.getTaxRate().intValue() + "%)", String.format("%.2f MAD", invoice.getTaxAmount())));
+        if (invoice.getDiscount().compareTo(BigDecimal.ZERO) > 0) {
             rows.add(List.of("", "", "Remise", String.format("-%.2f MAD", invoice.getDiscount())));
         }
         rows.add(List.of("", "", "TOTAL TTC", String.format("%.2f MAD", invoice.getTotalAmount())));

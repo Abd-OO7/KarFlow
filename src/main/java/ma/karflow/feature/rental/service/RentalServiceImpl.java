@@ -29,6 +29,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -114,9 +116,9 @@ public class RentalServiceImpl implements RentalService {
         long days = ChronoUnit.DAYS.between(request.startDate(), request.endDate());
         if (days < 1) days = 1;
 
-        double dailyRate = vehicle.getDailyRate() * vehicle.getCategory().getDailyRateMultiplier();
-        double insuranceCost = insurance != null ? insurance.getDailyRate() * days : 0;
-        double totalAmount = (dailyRate * days) + insuranceCost;
+        BigDecimal dailyRate = vehicle.getDailyRate().multiply(vehicle.getCategory().getDailyRateMultiplier());
+        BigDecimal insuranceCost = insurance != null ? insurance.getDailyRate().multiply(BigDecimal.valueOf(days)) : BigDecimal.ZERO;
+        BigDecimal totalAmount = dailyRate.multiply(BigDecimal.valueOf(days)).add(insuranceCost);
 
         // Create rental
         Rental rental = new Rental();
@@ -156,7 +158,7 @@ public class RentalServiceImpl implements RentalService {
                             "vehicleInfo", vehicle.getVehicleModel().getName() + " — " + vehicle.getLicensePlate(),
                             "startDate", request.startDate().toString(),
                             "endDate", request.endDate().toString(),
-                            "totalAmount", String.format("%.2f", totalAmount),
+                            "totalAmount", totalAmount.toPlainString(),
                             "deposit", String.format("%.2f", request.deposit())
                     )
             );
@@ -215,27 +217,27 @@ public class RentalServiceImpl implements RentalService {
         rental.setStatus(RentalStatus.RETURNED);
 
         // Calculate extra charges
-        double extraCharges = 0;
+        BigDecimal extraCharges = BigDecimal.ZERO;
 
         // Extra days
         if (request.actualReturnDate().isAfter(rental.getEndDate())) {
             long extraDays = ChronoUnit.DAYS.between(rental.getEndDate(), request.actualReturnDate());
-            double dailyRate = rental.getVehicle().getDailyRate() * rental.getVehicle().getCategory().getDailyRateMultiplier();
-            extraCharges += extraDays * dailyRate * 1.5; // 50% penalty for late return
+            BigDecimal dailyRate = rental.getVehicle().getDailyRate().multiply(rental.getVehicle().getCategory().getDailyRateMultiplier());
+            extraCharges = extraCharges.add(BigDecimal.valueOf(extraDays).multiply(dailyRate).multiply(new BigDecimal("1.5"))); // 50% penalty for late return
         }
 
         // Extra km (if > 0 and mileage reported)
         if (inspectionReq.mileage() != null && rental.getMileageBefore() != null) {
-            double kmDriven = inspectionReq.mileage() - rental.getMileageBefore();
+            BigDecimal kmDriven = inspectionReq.mileage().subtract(rental.getMileageBefore());
             // Free km included in daily rate, extra at 2 MAD/km
             long rentalDays = ChronoUnit.DAYS.between(rental.getStartDate(), request.actualReturnDate());
-            double freeKm = rentalDays * 250; // 250 km/day included
-            if (kmDriven > freeKm) {
-                extraCharges += (kmDriven - freeKm) * 2.0;
+            BigDecimal freeKm = BigDecimal.valueOf(rentalDays).multiply(BigDecimal.valueOf(250)); // 250 km/day included
+            if (kmDriven.compareTo(freeKm) > 0) {
+                extraCharges = extraCharges.add(kmDriven.subtract(freeKm).multiply(new BigDecimal("2.00")));
             }
         }
 
-        rental.setTotalAmount(rental.getTotalAmount() + extraCharges);
+        rental.setTotalAmount(rental.getTotalAmount().add(extraCharges));
         rental = rentalRepository.save(rental);
 
         // Update vehicle status

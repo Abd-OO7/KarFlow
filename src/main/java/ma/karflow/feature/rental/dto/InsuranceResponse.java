@@ -1,5 +1,6 @@
 package ma.karflow.feature.rental.dto;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 public record InsuranceResponse(
@@ -7,7 +8,7 @@ public record InsuranceResponse(
         String name,
         String description,
         String coverageType,
-        double dailyRate,
+        BigDecimal dailyRate,
         String provider
 ) {
 }

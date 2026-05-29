@@ -9,6 +9,8 @@ import ma.karflow.feature.rental.entity.Rental;
 import ma.karflow.shared.entity.BaseEntity;
 import org.hibernate.annotations.SQLRestriction;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,20 +26,20 @@ public class Invoice extends BaseEntity {
     @Column(name = "invoice_number", nullable = false, length = 30)
     private String invoiceNumber;
 
-    @Column(name = "subtotal", nullable = false)
-    private double subtotal;
+    @Column(name = "subtotal", nullable = false, precision = 19, scale = 2)
+    private BigDecimal subtotal = BigDecimal.ZERO;
 
-    @Column(name = "tax_rate", nullable = false)
-    private double taxRate = 20.0;
+    @Column(name = "tax_rate", nullable = false, precision = 5, scale = 2)
+    private BigDecimal taxRate = new BigDecimal("20.00");
 
     @Column(name = "tax_amount", nullable = false)
-    private double taxAmount;
+    private BigDecimal taxAmount = BigDecimal.ZERO;
 
     @Column(name = "discount")
-    private double discount;
+    private BigDecimal discount = BigDecimal.ZERO;
 
     @Column(name = "total_amount", nullable = false)
-    private double totalAmount;
+    private BigDecimal totalAmount = BigDecimal.ZERO;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 30)
@@ -60,12 +62,17 @@ public class Invoice extends BaseEntity {
     private List<Payment> payments = new ArrayList<>();
 
     public void recalculate() {
-        this.subtotal = lines.stream().mapToDouble(InvoiceLine::getTotalPrice).sum();
-        this.taxAmount = subtotal * (taxRate / 100.0);
-        this.totalAmount = subtotal + taxAmount - discount;
+        this.subtotal = lines.stream()
+                .map(InvoiceLine::getTotalPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        this.taxAmount = subtotal.multiply(taxRate)
+                .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+        this.totalAmount = subtotal.add(taxAmount).subtract(discount != null ? discount : BigDecimal.ZERO);
     }
 
-    public double getTotalPaid() {
-        return payments.stream().mapToDouble(Payment::getAmount).sum();
+    public BigDecimal getTotalPaid() {
+        return payments.stream()
+                .map(Payment::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }

@@ -32,6 +32,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Optional;
@@ -66,7 +67,7 @@ class RentalServiceImplTest {
         TenantContext.setTenantId(tenantId);
 
         Category category = new Category();
-        category.setDailyRateMultiplier(1.0);
+        category.setDailyRateMultiplier(BigDecimal.ONE);
 
         Brand brand = new Brand();
         brand.setName("Toyota");
@@ -78,8 +79,8 @@ class RentalServiceImplTest {
         vehicle = new Vehicle();
         vehicle.setId(UUID.randomUUID());
         vehicle.setLicensePlate("AB-123-CD");
-        vehicle.setDailyRate(300.0);
-        vehicle.setMileage(50000);
+        vehicle.setDailyRate(new BigDecimal("300.00"));
+        vehicle.setMileage(new BigDecimal("50000"));
         vehicle.setStatus(VehicleStatus.AVAILABLE);
         vehicle.setCategory(category);
         vehicle.setVehicleModel(model);
@@ -101,11 +102,11 @@ class RentalServiceImplTest {
     void create_shouldCalculateTotalAndSetVehicleRented() {
         RentalCreateRequest request = new RentalCreateRequest(
                 LocalDate.now(), LocalDate.now().plusDays(5),
-                1000, null, vehicle.getId(), client.getId(), null);
+                new BigDecimal("1000"), null, vehicle.getId(), client.getId(), null);
 
         RentalResponse expected = new RentalResponse(UUID.randomUUID(),
-                request.startDate(), request.endDate(), null, 50000.0, null,
-                1000, 1500.0, RentalStatus.ACTIVE, null,
+                request.startDate(), request.endDate(), null, new BigDecimal("50000"), null,
+                new BigDecimal("1000"), new BigDecimal("1500.00"), RentalStatus.ACTIVE, null,
                 vehicle.getId(), "AB-123-CD", "Corolla",
                 client.getId(), "Ahmed Benali", null, null, null);
 
@@ -129,7 +130,7 @@ class RentalServiceImplTest {
         vehicle.setStatus(VehicleStatus.RENTED);
         RentalCreateRequest request = new RentalCreateRequest(
                 LocalDate.now(), LocalDate.now().plusDays(3),
-                500, null, vehicle.getId(), client.getId(), null);
+                new BigDecimal("500"), null, vehicle.getId(), client.getId(), null);
 
         when(vehicleRepository.findByIdAndTenantId(vehicle.getId(), tenantId)).thenReturn(Optional.of(vehicle));
 
@@ -140,7 +141,7 @@ class RentalServiceImplTest {
     void create_withEndDateBeforeStartDate_shouldThrow() {
         RentalCreateRequest request = new RentalCreateRequest(
                 LocalDate.now().plusDays(5), LocalDate.now(),
-                500, null, vehicle.getId(), client.getId(), null);
+                new BigDecimal("500"), null, vehicle.getId(), client.getId(), null);
 
         assertThrows(BusinessException.class, () -> rentalService.create(request));
     }
@@ -153,21 +154,21 @@ class RentalServiceImplTest {
         rental.setStatus(RentalStatus.ACTIVE);
         rental.setStartDate(LocalDate.now().minusDays(5));
         rental.setEndDate(LocalDate.now());
-        rental.setMileageBefore(50000.0);
-        rental.setTotalAmount(1500.0);
+        rental.setMileageBefore(new BigDecimal("50000"));
+        rental.setTotalAmount(new BigDecimal("1500.00"));
         rental.setVehicle(vehicle);
         rental.setClient(client);
         vehicle.setStatus(VehicleStatus.RENTED);
 
         InspectionReportRequest inspectionReq = new InspectionReportRequest(
-                InspectionType.RETURN, 0.75, 50500.0,
+                InspectionType.RETURN, new BigDecimal("0.75"), new BigDecimal("50500"),
                 false, false, false, false, false, false, false, false,
                 "Bon", "Bon", null, null, null, null);
         ReturnRequest request = new ReturnRequest(LocalDate.now(), inspectionReq);
 
         RentalResponse expected = new RentalResponse(rental.getId(),
                 rental.getStartDate(), rental.getEndDate(), LocalDate.now(),
-                50000.0, 50500.0, 0, 1500.0, RentalStatus.RETURNED, null,
+                new BigDecimal("50000"), new BigDecimal("50500"), BigDecimal.ZERO, new BigDecimal("1500.00"), RentalStatus.RETURNED, null,
                 vehicle.getId(), "AB-123-CD", "Corolla",
                 client.getId(), "Ahmed Benali", null, null, null);
 
@@ -196,7 +197,7 @@ class RentalServiceImplTest {
         vehicle.setStatus(VehicleStatus.RENTED);
 
         RentalResponse expected = new RentalResponse(rental.getId(),
-                null, null, null, null, null, 0, 0, RentalStatus.CANCELLED, null,
+                null, null, null, null, null, BigDecimal.ZERO, BigDecimal.ZERO, RentalStatus.CANCELLED, null,
                 vehicle.getId(), "AB-123-CD", "Corolla",
                 client.getId(), "Ahmed Benali", null, null, null);
 

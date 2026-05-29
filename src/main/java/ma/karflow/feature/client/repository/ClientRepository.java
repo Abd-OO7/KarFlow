@@ -27,4 +27,10 @@ public interface ClientRepository extends JpaRepository<Client, UUID> {
     Page<Client> search(@Param("tenantId") UUID tenantId, @Param("q") String query, Pageable pageable);
 
     long countByTenantId(UUID tenantId);
+
+    @Query("SELECT c FROM Client c WHERE c.email = :email AND c.deleted = false")
+    Optional<Client> findByEmail(@Param("email") String email);
+
+    @Query("SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END FROM Client c WHERE c.email = :email AND c.password IS NOT NULL AND c.deleted = false")
+    boolean existsByEmailWithPassword(@Param("email") String email);
 }

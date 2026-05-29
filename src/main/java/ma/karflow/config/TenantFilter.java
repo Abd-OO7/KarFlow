@@ -33,7 +33,8 @@ public class TenantFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
         try {
             UUID tenantId = TenantContext.getTenantId();
-            if (tenantId != null) {
+            // Don't apply tenant filter for SUPER_ADMIN or platform endpoints
+            if (tenantId != null && !isSuperAdmin()) {
                 Session session = entityManager.unwrap(Session.class);
                 session.enableFilter("tenantFilter").setParameter("tenantId", tenantId);
             }
@@ -43,11 +44,20 @@ public class TenantFilter extends OncePerRequestFilter {
         }
     }
 
+    private boolean isSuperAdmin() {
+        var auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) return false;
+        return auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_SUPER_ADMIN"));
+    }
+
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
         return path.startsWith("/api/v1/auth")
                 || path.startsWith("/api/v1/public")
+                || path.startsWith("/api/v1/platform")
+                || path.startsWith("/api/v1/client")
                 || path.startsWith("/swagger-ui")
                 || path.startsWith("/api-docs")
                 || path.startsWith("/actuator");

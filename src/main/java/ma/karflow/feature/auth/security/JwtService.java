@@ -84,4 +84,27 @@ public class JwtService {
             return false;
         }
     }
+
+    public String generateClientAccessToken(String email, UUID clientId) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("clientId", clientId.toString());
+        claims.put("roles", Set.of("CLIENT"));
+        claims.put("type", "client");
+        return Jwts.builder()
+                .claims(claims)
+                .subject(email)
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + jwtConfig.getAccessTokenExpiration()))
+                .signWith(getSigningKey())
+                .compact();
+    }
+
+    public UUID extractClientId(String token) {
+        String clientId = extractAllClaims(token).get("clientId", String.class);
+        return clientId != null ? UUID.fromString(clientId) : null;
+    }
+
+    public boolean isClientToken(String token) {
+        return "client".equals(extractAllClaims(token).get("type", String.class));
+    }
 }

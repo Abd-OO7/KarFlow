@@ -14,7 +14,7 @@ public interface InvoiceMapper {
     @Mapping(target = "clientFullName", expression = "java(entity.getRental().getClient().getFirstName() + \" \" + entity.getRental().getClient().getLastName())")
     @Mapping(source = "rental.vehicle.licensePlate", target = "vehicleLicensePlate")
     @Mapping(target = "totalPaid", expression = "java(entity.getTotalPaid())")
-    @Mapping(target = "remainingAmount", expression = "java(entity.getTotalAmount() - entity.getTotalPaid())")
+    @Mapping(target = "remainingAmount", expression = "java(entity.getTotalAmount().subtract(entity.getTotalPaid()))")
     InvoiceResponse toResponse(Invoice entity);
 
     InvoiceLineResponse toLineResponse(InvoiceLine line);

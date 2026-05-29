@@ -1,5 +1,6 @@
 package ma.karflow.feature.dashboard.dto;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public record DashboardStatsResponse(
@@ -12,7 +13,7 @@ public record DashboardStatsResponse(
         long overdueRentals,
         long totalInvoices,
         long unpaidInvoices,
-        double totalRevenue,
+        BigDecimal totalRevenue,
         double fleetOccupancyRate,
         List<UpcomingReturnDto> upcomingReturns
 ) {

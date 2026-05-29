@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -34,4 +35,15 @@ public interface VehicleRepository extends JpaRepository<Vehicle, UUID> {
                                   Pageable pageable);
 
     long countByTenantIdAndStatus(UUID tenantId, VehicleStatus status);
+
+    @Query("SELECT COUNT(v) FROM Vehicle v WHERE v.tenantId = :tenantId AND v.deleted = false")
+    long countAllByTenantId(@Param("tenantId") UUID tenantId);
+
+    @Query("SELECT v FROM Vehicle v JOIN FETCH v.vehicleModel vm JOIN FETCH vm.brand JOIN FETCH v.category " +
+            "WHERE v.tenantId IN :tenantIds AND v.status = ma.karflow.feature.vehicle.enums.VehicleStatus.AVAILABLE AND v.deleted = false")
+    List<Vehicle> findAvailableByTenantIds(@Param("tenantIds") List<UUID> tenantIds);
+
+    @Query("SELECT v FROM Vehicle v JOIN FETCH v.vehicleModel vm JOIN FETCH vm.brand JOIN FETCH v.category " +
+            "WHERE v.status = ma.karflow.feature.vehicle.enums.VehicleStatus.AVAILABLE AND v.deleted = false")
+    List<Vehicle> findAllAvailable();
 }

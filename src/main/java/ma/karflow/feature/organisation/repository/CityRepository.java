@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -20,4 +21,7 @@ public interface CityRepository extends JpaRepository<City, UUID> {
 
     @Query("SELECT c FROM City c WHERE c.tenantId = :tenantId AND LOWER(c.name) LIKE LOWER(CONCAT('%', :query, '%'))")
     Page<City> searchByName(@Param("tenantId") UUID tenantId, @Param("query") String query, Pageable pageable);
+
+    @Query("SELECT c FROM City c WHERE LOWER(c.name) LIKE LOWER(CONCAT('%', :query, '%')) AND c.deleted = false")
+    List<City> searchByNamePublic(@Param("query") String query);
 }

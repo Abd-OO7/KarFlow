@@ -3,10 +3,12 @@ package ma.karflow.feature.auth.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ma.karflow.feature.auth.dto.*;
+import ma.karflow.feature.auth.entity.PasswordResetToken;
 import ma.karflow.feature.auth.entity.Permission;
 import ma.karflow.feature.auth.entity.Role;
 import ma.karflow.feature.auth.entity.User;
 import ma.karflow.feature.auth.enums.RoleType;
+import ma.karflow.feature.auth.repository.PasswordResetTokenRepository;
 import ma.karflow.feature.auth.repository.PermissionRepository;
 import ma.karflow.feature.auth.repository.RoleRepository;
 import ma.karflow.feature.auth.repository.UserRepository;
@@ -14,10 +16,15 @@ import ma.karflow.feature.auth.security.JwtService;
 import ma.karflow.feature.auth.security.UserDetailsAdapter;
 import ma.karflow.feature.organisation.entity.Organisation;
 import ma.karflow.feature.organisation.repository.OrganisationRepository;
+import ma.karflow.feature.subscription.entity.Subscription;
+import ma.karflow.feature.subscription.enums.SubscriptionPlan;
+import ma.karflow.feature.subscription.enums.SubscriptionStatus;
+import ma.karflow.feature.subscription.repository.SubscriptionRepository;
 import ma.karflow.shared.exception.BusinessException;
 import ma.karflow.shared.exception.DuplicateResourceException;
 import ma.karflow.shared.exception.ResourceNotFoundException;
 import ma.karflow.shared.util.EmailService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,6 +32,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -41,9 +50,14 @@ public class AuthServiceImpl implements AuthService {
     private final RoleRepository roleRepository;
     private final PermissionRepository permissionRepository;
     private final OrganisationRepository organisationRepository;
+    private final SubscriptionRepository subscriptionRepository;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final EmailService emailService;
+
+    @Value("${karflow.frontend-url:http://localhost:4200}")
+    private String frontendUrl;
 
     private static final List<String> DEFAULT_PERMISSIONS = List.of(
             "VEHICLE_READ", "VEHICLE_WRITE",
@@ -104,6 +118,18 @@ public class AuthServiceImpl implements AuthService {
         organisation.setName(request.organisationName());
         organisation.setEmail(request.email());
         organisation = organisationRepository.save(organisation);
+
+        // Create TRIAL subscription for the new organisation
+        Subscription subscription = new Subscription();
+        subscription.setTenantId(tenantId);
+        subscription.setOrganisation(organisation);
+        subscription.setPlan(SubscriptionPlan.TRIAL);
+        subscription.setStatus(SubscriptionStatus.TRIAL);
+        subscription.setTrialStartDate(LocalDateTime.now());
+        subscription.setTrialEndDate(LocalDateTime.now().plusDays(20));
+        subscription.setMonthlyPrice(BigDecimal.ZERO);
+        subscription.setAutoRenew(true);
+        subscriptionRepository.save(subscription);
 
         // Create the user with OWNER role
         User user = new User();
@@ -189,6 +215,61 @@ public class AuthServiceImpl implements AuthService {
                 roleNames,
                 user.getCreatedAt()
         );
+    }
+
+    @Override
+    @Transactional
+    public void forgotPassword(ForgotPasswordRequest request) {
+        User user = userRepository.findByEmail(request.email()).orElse(null);
+
+        // Always return success to avoid email enumeration
+        if (user == null) {
+            log.warn("Password reset requested for unknown email: {}", request.email());
+            return;
+        }
+
+        // Cleanup old unused tokens for this user
+        passwordResetTokenRepository.deleteAllByUserIdAndUsedFalse(user.getId());
+
+        // Generate token and save
+        String token = UUID.randomUUID().toString();
+        PasswordResetToken resetToken = new PasswordResetToken();
+        resetToken.setTenantId(user.getTenantId());
+        resetToken.setToken(token);
+        resetToken.setUser(user);
+        resetToken.setExpiresAt(LocalDateTime.now().plusHours(1));
+        passwordResetTokenRepository.save(resetToken);
+
+        // Build reset link and send email
+        String resetUrl = frontendUrl + "/reset-password?token=" + token;
+        emailService.sendHtmlEmail(
+                user.getEmail(),
+                "Réinitialisation de votre mot de passe KarFlow",
+                "password-reset",
+                Map.of("username", user.getUsername(), "resetUrl", resetUrl)
+        );
+
+        log.info("Password reset token generated for user: {}", user.getEmail());
+    }
+
+    @Override
+    @Transactional
+    public void resetPassword(ResetPasswordRequest request) {
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByTokenAndUsedFalse(request.token())
+                .orElseThrow(() -> new BusinessException("Token de réinitialisation invalide ou déjà utilisé"));
+
+        if (resetToken.getExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new BusinessException("Le token de réinitialisation a expiré");
+        }
+
+        User user = resetToken.getUser();
+        user.setPassword(passwordEncoder.encode(request.newPassword()));
+        userRepository.save(user);
+
+        resetToken.setUsed(true);
+        passwordResetTokenRepository.save(resetToken);
+
+        log.info("Password reset successful for user: {}", user.getEmail());
     }
 
     private AuthResponse buildAuthResponse(User user) {

@@ -8,6 +8,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -27,5 +30,24 @@ public interface InvoiceRepository extends JpaRepository<Invoice, UUID> {
     long countByTenantIdAndStatus(UUID tenantId, InvoiceStatus status);
 
     @Query("SELECT COALESCE(SUM(i.totalAmount), 0) FROM Invoice i WHERE i.tenantId = :tenantId AND i.status = 'PAID'")
-    double sumPaidAmountByTenantId(@Param("tenantId") UUID tenantId);
+    BigDecimal sumPaidAmountByTenantId(@Param("tenantId") UUID tenantId);
+
+    @Query("SELECT COALESCE(SUM(i.totalAmount), 0) FROM Invoice i WHERE i.tenantId = :tenantId AND i.status = 'PAID' AND i.paidDate BETWEEN :from AND :to")
+    BigDecimal sumPaidAmountByTenantIdAndDateRange(@Param("tenantId") UUID tenantId,
+                                                    @Param("from") java.time.LocalDate from,
+                                                    @Param("to") java.time.LocalDate to);
+
+    @Query("SELECT COUNT(i) FROM Invoice i WHERE i.tenantId = :tenantId AND i.status = 'PAID' AND i.paidDate BETWEEN :from AND :to")
+    long countPaidByTenantIdAndDateRange(@Param("tenantId") UUID tenantId,
+                                         @Param("from") java.time.LocalDate from,
+                                         @Param("to") java.time.LocalDate to);
+
+    @Query("SELECT COUNT(i) FROM Invoice i WHERE i.tenantId = :tenantId AND i.status IN ('SENT', 'OVERDUE', 'PAID') AND i.deleted = false")
+    long countAllNonDraftByTenantId(@Param("tenantId") UUID tenantId);
+
+    @Query("SELECT COUNT(i) FROM Invoice i WHERE i.tenantId = :tenantId AND i.status IN ('SENT', 'OVERDUE') AND i.deleted = false")
+    long countUnpaidByTenantId(@Param("tenantId") UUID tenantId);
+
+    @Query("SELECT i FROM Invoice i WHERE i.status = 'SENT' AND i.dueDate < :today AND i.deleted = false")
+    List<Invoice> findAllOverdueInvoices(@Param("today") LocalDate today);
 }

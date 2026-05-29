@@ -9,6 +9,8 @@ import ma.karflow.feature.rental.enums.InspectionType;
 import ma.karflow.shared.entity.BaseEntity;
 import org.hibernate.annotations.SQLRestriction;
 
+import java.math.BigDecimal;
+
 @Entity
 @Table(name = "inspection_report")
 @Getter
@@ -21,11 +23,11 @@ public class InspectionReport extends BaseEntity {
     @Column(name = "type", nullable = false, length = 20)
     private InspectionType type;
 
-    @Column(name = "fuel_level")
-    private Double fuelLevel;
+    @Column(name = "fuel_level", precision = 5, scale = 2)
+    private BigDecimal fuelLevel;
 
-    @Column(name = "mileage")
-    private Double mileage;
+    @Column(name = "mileage", precision = 19, scale = 2)
+    private BigDecimal mileage;
 
     @Column(name = "exterior_front_scratches")
     private boolean exteriorFrontScratches;

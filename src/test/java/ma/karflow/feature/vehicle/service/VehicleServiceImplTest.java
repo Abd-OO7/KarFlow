@@ -17,6 +17,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -61,7 +62,7 @@ class VehicleServiceImplTest {
 
         testVehicle = new Vehicle();
         testVehicle.setLicensePlate("AB-123-CD");
-        testVehicle.setDailyRate(350.0);
+        testVehicle.setDailyRate(new BigDecimal("350.00"));
         testVehicle.setStatus(VehicleStatus.AVAILABLE);
         testVehicle.setVehicleModel(testModel);
         testVehicle.setCategory(testCategory);
@@ -77,8 +78,8 @@ class VehicleServiceImplTest {
     void create_shouldSucceed() {
         UUID modelId = UUID.randomUUID();
         UUID categoryId = UUID.randomUUID();
-        VehicleRequest request = new VehicleRequest("AB-123-CD", "White", 0, 350.0, null, modelId, categoryId);
-        VehicleResponse expected = new VehicleResponse(UUID.randomUUID(), "AB-123-CD", "White", 0, 350.0, null, VehicleStatus.AVAILABLE, null, null, null);
+        VehicleRequest request = new VehicleRequest("AB-123-CD", "White", BigDecimal.ZERO, new BigDecimal("350.00"), null, modelId, categoryId);
+        VehicleResponse expected = new VehicleResponse(UUID.randomUUID(), "AB-123-CD", "White", BigDecimal.ZERO, new BigDecimal("350.00"), null, VehicleStatus.AVAILABLE, null, null, null);
 
         when(vehicleRepository.existsByLicensePlateAndTenantId("AB-123-CD", tenantId)).thenReturn(false);
         when(vehicleModelRepository.findByIdAndTenantId(modelId, tenantId)).thenReturn(Optional.of(testModel));
@@ -99,7 +100,7 @@ class VehicleServiceImplTest {
     void create_withDuplicatePlate_shouldThrow() {
         UUID modelId = UUID.randomUUID();
         UUID categoryId = UUID.randomUUID();
-        VehicleRequest request = new VehicleRequest("AB-123-CD", "White", 0, 350.0, null, modelId, categoryId);
+        VehicleRequest request = new VehicleRequest("AB-123-CD", "White", BigDecimal.ZERO, new BigDecimal("350.00"), null, modelId, categoryId);
 
         when(vehicleRepository.existsByLicensePlateAndTenantId("AB-123-CD", tenantId)).thenReturn(true);
 
@@ -110,7 +111,7 @@ class VehicleServiceImplTest {
     void changeStatus_shouldRecordHistory() {
         UUID vehicleId = UUID.randomUUID();
         VehicleStatusRequest request = new VehicleStatusRequest(VehicleStatus.MAINTENANCE, "Vidange programmée");
-        VehicleResponse expected = new VehicleResponse(vehicleId, "AB-123-CD", "White", 0, 350.0, null, VehicleStatus.MAINTENANCE, null, null, null);
+        VehicleResponse expected = new VehicleResponse(vehicleId, "AB-123-CD", "White", BigDecimal.ZERO, new BigDecimal("350.00"), null, VehicleStatus.MAINTENANCE, null, null, null);
 
         when(vehicleRepository.findByIdAndTenantId(vehicleId, tenantId)).thenReturn(Optional.of(testVehicle));
         when(vehicleRepository.save(any(Vehicle.class))).thenReturn(testVehicle);

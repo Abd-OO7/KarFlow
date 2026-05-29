@@ -8,6 +8,7 @@ import ma.karflow.feature.billing.enums.PaymentMethod;
 import ma.karflow.shared.entity.BaseEntity;
 import org.hibernate.annotations.SQLRestriction;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -18,8 +19,8 @@ import java.time.LocalDateTime;
 @SQLRestriction("deleted = false")
 public class Payment extends BaseEntity {
 
-    @Column(name = "amount", nullable = false)
-    private double amount;
+    @Column(name = "amount", nullable = false, precision = 19, scale = 2)
+    private BigDecimal amount;
 
     @Column(name = "payment_date", nullable = false)
     private LocalDateTime paymentDate;

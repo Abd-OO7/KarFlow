@@ -3,12 +3,14 @@ package ma.karflow.feature.rental.dto;
 import jakarta.validation.constraints.NotNull;
 import ma.karflow.feature.rental.enums.InspectionType;
 
+import java.math.BigDecimal;
+
 public record InspectionReportRequest(
         @NotNull(message = "Le type d'inspection est obligatoire")
         InspectionType type,
 
-        Double fuelLevel,
-        Double mileage,
+        BigDecimal fuelLevel,
+        BigDecimal mileage,
 
         boolean exteriorFrontScratches,
         boolean exteriorFrontDents,
